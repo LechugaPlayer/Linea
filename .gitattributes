@@ -1,0 +1,5 @@
+# Keep shell scripts on LF. A CRLF build.bash fails in bash with
+# "$'\r': command not found" errors.
+*.bash text eol=lf
+*.sh text eol=lf
+*.clangd text eol=lf

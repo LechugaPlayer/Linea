@@ -1,0 +1,13 @@
+# build output
+build/
+
+# object files / binaries
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+
+# clangd / LSP caches
+.cache/
+compile_commands.json
