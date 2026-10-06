@@ -66,7 +66,6 @@ void lin::drawRect(float minX, float minY, float maxX, float maxY, uint32_t colo
 }
 
 void plotCirclePoints(int cx, int cy, int x, int y, uint32_t color) {
-  //NOTE: Fairly easy to make it parallel
   lin::drawPixel(cx + x, cy + y, color);
   lin::drawPixel(cx - x, cy + y, color);
   lin::drawPixel(cx + x, cy - y, color);
@@ -78,7 +77,7 @@ void plotCirclePoints(int cx, int cy, int x, int y, uint32_t color) {
 }
 
 
-void lin::drawCircle(float centerX, float centerY, float radius, uint32_t color){
+void lin::drawCircle(int centerX, int centerY, int radius, uint32_t color){
   
   int x = 0;
   int y = radius;
@@ -95,5 +94,59 @@ void lin::drawCircle(float centerX, float centerY, float radius, uint32_t color)
 
   plotCirclePoints(centerX, centerY, x, y, color);
   }
+  
 
 }
+void plotEllipsePoints(int cx, int cy, int x, int y, uint32_t color) {
+  lin::drawPixel(cx + x, cy + y, color);
+  lin::drawPixel(cx - x, cy + y, color);
+  lin::drawPixel(cx + x, cy - y, color);
+  lin::drawPixel(cx - x, cy - y, color);
+}
+
+  void lin::drawEllipse(int major, int minor, int centerX, int centerY, uint32_t color){
+    
+  int dx, dy, d1, d2, x , y;    
+  x = 0;
+  y = minor;
+  
+  d1 = (minor * minor) - ( major * major) + (0.25 * major * major);
+  dx = 2 * minor * minor * x;
+  dy = 2 * major * major * y;
+
+  while (dx < dy) {
+  plotEllipsePoints(centerX, centerY, x, y, color);
+    if (d1 < 0) {
+      
+      x++;
+      dx = dx + (2 * minor * minor);
+      d1 = d1 + dx + (minor * minor);
+    }else{
+      x++;
+      y--;
+      dx = dx + (2 * minor * minor);
+      dy = dy - (2 * major *major);
+      d1 = d1 + dx - dy + (minor * minor);
+    }
+  }
+
+
+   d2 = ((minor * minor) * ((x + 0.5) * (x + 0.5)))
+         + ((major * major) * ((y - 1) * (y - 1)))
+         - (major * major * minor * minor);
+   while (y >= 0) {
+     plotEllipsePoints(centerX, centerY, x, y, color);
+
+     if (d2 > 0) {
+       y--;
+       dy =dy - (2 * major * major);
+       d2 = d2 + (major * major) - dy;
+     }else{
+       y--;
+       x++;
+       dx = dx + (2 * minor * minor);
+       dy = dy - (2 * major * major);
+       d2 = d2 +dx -dy + (major * major);
+     }
+   }
+    }
