@@ -1,127 +1,51 @@
-#include <Windows.h>
-#include <cstdint>
 #include "lin.hpp"
+#include <cstdint>
+#include <cstdlib>
+#include <cstdio>
 
-constexpr int WIDTH = 1920;
-constexpr int HEIGHT = 1080;
+constexpr uint32_t WIDTH = 600;
+constexpr uint32_t HEIGHT = 800;
 
-// GDI resources
-HDC memoryDC = nullptr;
-HBITMAP bitmap = nullptr;
-HGDIOBJ oldBitmap = nullptr;
+uint32_t* pixels = nullptr;
 
+bool writePPM( const char* path){
+    FILE* file = std::fopen(path, "wb");
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-HWND windowsCreate(HINSTANCE hInstance){
-    
-    
-    const wchar_t CLASS_NAME[] = L"Sample Window Class";
-
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = CLASS_NAME;
-
-    RegisterClass(&wc);
-
-    RECT rect = { 0, 0, WIDTH, HEIGHT };
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-
-    HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"Software Renderer", WS_OVERLAPPEDWINDOW,
-                               CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
-                               nullptr, nullptr, hInstance, nullptr);
-
-    if (!hwnd){
-        NULL;
+    if (!file) {
+        return false;
     }
-        return hwnd;
-}
+    std::fprintf(file, "P6\n%u %u\n 255 \n",
+                 WIDTH, HEIGHT);
+    for (uint32_t y = 0; y < HEIGHT; y++) {
+        for (uint32_t x = 0; x < WIDTH; x++) {
+           uint32_t pixel = pixels[y * WIDTH + x];
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, int nCmdShow) {
+           uint8_t r = (pixel >> 0 ) & 0xFF;
+           uint8_t g = (pixel >> 8 ) & 0xFF;
+           uint8_t b = (pixel >> 16) & 0xFF;
 
-    HWND hwnd = windowsCreate(hInstance);
-    
-    if (!hwnd) {
-        return 1;
-    }
-
-    // Initialize memory device context
-    memoryDC = CreateCompatibleDC(nullptr);
-
-    if (!memoryDC)
-        return 1;
-
-    // Configure DIB
-    BITMAPINFO bmi = {};
-
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = WIDTH;
-    bmi.bmiHeader.biHeight = -HEIGHT; // Top-down bitmap
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    // Create framebuffer
-    void* bitmapMemory = nullptr;
-
-    bitmap = CreateDIBSection(memoryDC, &bmi, DIB_RGB_COLORS, &bitmapMemory, nullptr, 0);
-
-    if (!bitmap || !bitmapMemory) {
-        DeleteDC(memoryDC);
-        return 1;
-    }
-
-    oldBitmap = SelectObject(memoryDC, bitmap);
-
-    //Paintint proccess    
-
-    lin::init(WIDTH, HEIGHT, static_cast<uint32_t*>(bitmapMemory));
-    lin::clear(0x0000FF00);
-    lin::drawCircle(70, 70, 60, 0x00000000);
-    lin::drawLine(150, 150, 700, 150, 0x00000000);
-    lin::drawRect(300, 300, 500, 500, 0x00000000);
-    lin::drawTriangle(800, 200, 200, 0, 100, 700, 0x00000000);
-
-    ShowWindow(hwnd, nCmdShow);
-
-    // Message loop
-    MSG msg = {};
-
-    while (GetMessage(&msg, nullptr, 0, 0) > 0) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    // Cleanup
-    SelectObject(memoryDC, oldBitmap);
-    DeleteObject(bitmap);
-    DeleteDC(memoryDC);
-
-    return 0;
-}
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC targetDC = BeginPaint(hwnd, &ps);
-
-            RECT clientRect;
-            GetClientRect(hwnd, &clientRect);
-
-            // Display framebuffer
-            StretchBlt(targetDC, 0, 0, clientRect.right, clientRect.bottom, memoryDC, 0, 0, WIDTH, HEIGHT, SRCCOPY);
-
-            EndPaint(hwnd, &ps);
-            return 0;
+            std::fputc(r, file);
+            std::fputc(g, file);
+            std::fputc(b, file);
         }
-
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
     }
+    std::fclose(file);
 
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return true;
+}
+
+int main(){
+    pixels = (uint32_t*)malloc(WIDTH * HEIGHT * sizeof(uint32_t));
+    lin::init(WIDTH, HEIGHT, pixels);
+
+    lin::drawLine(0, 0, 300, 400, lin::White);
+    lin::fillCircle(50, 50, 50, lin::Red);
+    
+    if (! writePPM("Test.ppm")) {
+    printf("Failed creation failed\n");
+
+    return 1;
+    }
+    
+    return 0;
 }
