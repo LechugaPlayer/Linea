@@ -1,35 +1,28 @@
 #include "lin.hpp"
+#include <cstddef>
 #include <stdlib.h>
 #include <algorithm>
 #include <cstdint>
-#include <Windows.h>
 
-int width;
-int height;
+int lwidth;
+int lheight;
 uint32_t* buffer = nullptr;
-struct Edge{
-    int yMax;
-    int xAtYMin;
-    int inverseSlope;
-    struct Edge* next;
-};
 
-void lin::init(int WIDTH, int HEIGHT, uint32_t* framebuffer){
-    width = WIDTH;
-    height = HEIGHT;  
-    buffer = framebuffer;
+void lin::init(size_t width, size_t height, uint32_t *framebuffer){
+  lwidth = width;
+  lheight = height;
+  buffer = framebuffer;
 }
-
 void lin::clear(uint32_t color){
-   for (int y = 0; y < height; y++) {
-     for (int x = 0; x < width; x++) {
-       buffer[y * width + x] = color;
+   for (int y = 0; y < lheight; y++) {
+     for (int x = 0; x < lwidth; x++) {
+       buffer[y * lwidth + x] = color;
      }
    } 
 }
 
 void lin::drawPixel(int x, int y, uint32_t color){
-    buffer[y * width + x] = color;
+    buffer[y * lwidth + x] = color;
 }
 
 void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
@@ -40,11 +33,12 @@ void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
   int sy = (srcY < desY) ? 1 : -1;
   int err = dx - dy;
 
+  
   while (true) {
-    int offset = srcY * width + srcX;
     
+    int offset = srcY * lwidth + srcX;
     buffer[offset] = color;
-
+    
     if (srcX == desX && srcY == desY) break;
     int e2 = 2* err;
     if (e2 > -dy) {
@@ -59,9 +53,9 @@ void lin::drawLine(int srcX, int srcY, int desX, int desY, uint32_t color){
 }
 
 void lin::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, uint32_t color){
-    lin::drawLine(x1, y1, x2, y2,color);
-    lin::drawLine(x2, y2, x3, y3,color);
-    lin::drawLine(x1, y1, x3, y3,color);
+    lin::drawLine(x1, y1, x2, y2, color);
+    lin::drawLine(x2, y2, x3, y3, color);
+    lin::drawLine(x1, y1, x3, y3, color);
 }
 
 void lin::drawRect(int minX, int minY, int maxX, int maxY, uint32_t color){

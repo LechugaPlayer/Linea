@@ -20,14 +20,16 @@ bool writePPM( const char* path){
         for (uint32_t x = 0; x < WIDTH; x++) {
            uint32_t pixel = pixels[y * WIDTH + x];
 
-           uint8_t r = (pixel >> 0 ) & 0xFF;
+           uint8_t r = (pixel >> 16 ) & 0xFF;
            uint8_t g = (pixel >> 8 ) & 0xFF;
-           uint8_t b = (pixel >> 16) & 0xFF;
+           uint8_t b = (pixel >> 0) & 0xFF;
 
-            std::fputc(r, file);
+           
             std::fputc(g, file);
             std::fputc(b, file);
+            std::fputc(r, file);
         }
+        
     }
     std::fclose(file);
 
@@ -38,14 +40,12 @@ int main(){
     pixels = (uint32_t*)malloc(WIDTH * HEIGHT * sizeof(uint32_t));
     lin::init(WIDTH, HEIGHT, pixels);
 
-    lin::drawLine(0, 0, 300, 400, lin::White);
-    lin::fillCircle(50, 50, 50, lin::Red);
     
-    if (! writePPM("Test.ppm")) {
-    printf("Failed creation failed\n");
-
-    return 1;
-    }
+    lin::drawLine(0, 0, 500, 500, lin::Cyan);
+    lin::drawRect(0, 0, 100, 100, lin::Red);
+    lin::drawTriangle(100, 5, 400, 100, 20, 60, lin::Green);
+    
+    writePPM("Test.ppm");
     
     return 0;
 }
